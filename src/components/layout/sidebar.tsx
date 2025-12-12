@@ -1,0 +1,199 @@
+import { NavLink, useNavigate } from 'react-router-dom'
+import {
+  LayoutDashboard,
+  FileText,
+  CheckSquare,
+  Shield,
+  Users,
+  LogOut,
+  ChevronLeft,
+  ChevronRight,
+  Settings,
+} from 'lucide-react'
+import { cn } from '@/lib/utils'
+import { useUserStore } from '@/store/use-user-store'
+import { useUIStore } from '@/store/use-ui-store'
+import { UserRole, ROLE_CONFIG } from '@/types'
+import { Button } from '@/components/ui/button'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { Separator } from '@/components/ui/separator'
+
+interface NavItem {
+  label: string
+  href: string
+  icon: React.ElementType
+  roles: UserRole[]
+}
+
+const navItems: NavItem[] = [
+  {
+    label: 'Dashboard',
+    href: '/dashboard',
+    icon: LayoutDashboard,
+    roles: [UserRole.Admin, UserRole.Transcriber, UserRole.Reviewer, UserRole.FinalReviewer],
+  },
+  {
+    label: 'My Tasks',
+    href: '/tasks',
+    icon: FileText,
+    roles: [UserRole.Transcriber],
+  },
+  {
+    label: 'Review Queue',
+    href: '/review',
+    icon: CheckSquare,
+    roles: [UserRole.Reviewer],
+  },
+  {
+    label: 'Final Review',
+    href: '/final-review',
+    icon: Shield,
+    roles: [UserRole.FinalReviewer],
+  },
+  {
+    label: 'User Management',
+    href: '/admin/users',
+    icon: Users,
+    roles: [UserRole.Admin],
+  },
+  {
+    label: 'All Tasks',
+    href: '/admin/tasks',
+    icon: FileText,
+    roles: [UserRole.Admin],
+  },
+]
+
+export function Sidebar() {
+  const navigate = useNavigate()
+  const { user, logout } = useUserStore()
+  const { sidebarCollapsed, toggleSidebar } = useUIStore()
+
+  if (!user) return null
+
+  const filteredNavItems = navItems.filter((item) =>
+    item.roles.includes(user.role)
+  )
+
+  const handleLogout = () => {
+    logout()
+    navigate('/login')
+  }
+
+  const getInitials = (name: string) => {
+    return name
+      .split(' ')
+      .map((n) => n[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2)
+  }
+
+  return (
+    <aside
+      className={cn(
+        'fixed left-0 top-0 z-40 flex h-screen flex-col border-r border-sidebar-border bg-sidebar transition-all duration-300',
+        sidebarCollapsed ? 'w-16' : 'w-60'
+      )}
+    >
+      {/* Logo / Brand */}
+      <div className="flex h-16 items-center justify-between px-4">
+        {!sidebarCollapsed && (
+          <div className="flex items-center gap-2">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
+              <FileText className="h-4 w-4 text-primary-foreground" />
+            </div>
+            <span className="font-semibold text-sidebar-foreground">TextAlign</span>
+          </div>
+        )}
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={toggleSidebar}
+          className="h-8 w-8 text-sidebar-foreground hover:bg-sidebar-accent"
+        >
+          {sidebarCollapsed ? (
+            <ChevronRight className="h-4 w-4" />
+          ) : (
+            <ChevronLeft className="h-4 w-4" />
+          )}
+        </Button>
+      </div>
+
+      <Separator className="bg-sidebar-border" />
+
+      {/* Navigation */}
+      <nav className="flex-1 space-y-1 p-2">
+        {filteredNavItems.map((item) => (
+          <NavLink
+            key={item.href}
+            to={item.href}
+            className={({ isActive }) =>
+              cn(
+                'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
+                isActive
+                  ? 'bg-sidebar-accent text-sidebar-accent-foreground'
+                  : 'text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
+                sidebarCollapsed && 'justify-center px-2'
+              )
+            }
+          >
+            <item.icon className="h-5 w-5 shrink-0" />
+            {!sidebarCollapsed && <span>{item.label}</span>}
+          </NavLink>
+        ))}
+      </nav>
+
+      <Separator className="bg-sidebar-border" />
+
+      {/* User Profile */}
+      <div className="p-2">
+        <div
+          className={cn(
+            'flex items-center gap-3 rounded-lg p-2',
+            sidebarCollapsed && 'justify-center'
+          )}
+        >
+          <Avatar className="h-9 w-9 shrink-0">
+            <AvatarImage src={user.avatar} alt={user.name} />
+            <AvatarFallback className="bg-primary text-primary-foreground text-xs">
+              {getInitials(user.name)}
+            </AvatarFallback>
+          </Avatar>
+          {!sidebarCollapsed && (
+            <div className="flex-1 overflow-hidden">
+              <p className="truncate text-sm font-medium text-sidebar-foreground">
+                {user.name}
+              </p>
+              <p className="truncate text-xs text-muted-foreground">
+                {ROLE_CONFIG[user.role].label}
+              </p>
+            </div>
+          )}
+        </div>
+
+        <div className={cn('mt-2 flex gap-1', sidebarCollapsed && 'flex-col')}>
+          <Button
+            variant="ghost"
+            size={sidebarCollapsed ? 'icon' : 'sm'}
+            className="flex-1 justify-start text-sidebar-foreground hover:bg-sidebar-accent"
+            onClick={() => navigate('/settings')}
+          >
+            <Settings className="h-4 w-4" />
+            {!sidebarCollapsed && <span className="ml-2">Settings</span>}
+          </Button>
+          <Button
+            variant="ghost"
+            size={sidebarCollapsed ? 'icon' : 'sm'}
+            className="flex-1 justify-start text-destructive hover:bg-destructive/10 hover:text-destructive"
+            onClick={handleLogout}
+          >
+            <LogOut className="h-4 w-4" />
+            {!sidebarCollapsed && <span className="ml-2">Logout</span>}
+          </Button>
+        </div>
+      </div>
+    </aside>
+  )
+}
+

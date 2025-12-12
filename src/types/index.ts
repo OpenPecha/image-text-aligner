@@ -1,0 +1,152 @@
+// User roles in the system
+export enum UserRole {
+  Admin = 'admin',
+  Transcriber = 'transcriber',
+  Reviewer = 'reviewer',
+  FinalReviewer = 'final_reviewer',
+}
+
+// Task status following the state machine
+export enum TaskStatus {
+  Pending = 'pending',
+  InProgress = 'in_progress',
+  AwaitingReview = 'awaiting_review',
+  InReview = 'in_review',
+  AwaitingFinalReview = 'awaiting_final_review',
+  FinalReview = 'final_review',
+  Completed = 'completed',
+  Rejected = 'rejected',
+}
+
+// Actions that can be recorded in task history
+export enum TaskAction {
+  Created = 'created',
+  Assigned = 'assigned',
+  Started = 'started',
+  Submitted = 'submitted',
+  ClaimedForReview = 'claimed_for_review',
+  Approved = 'approved',
+  Rejected = 'rejected',
+  ClaimedForFinalReview = 'claimed_for_final_review',
+  FinalApproved = 'final_approved',
+  FinalRejected = 'final_rejected',
+  Reassigned = 'reassigned',
+  TextUpdated = 'text_updated',
+}
+
+// User interface
+export interface User {
+  id: string
+  name: string
+  email: string
+  role: UserRole
+  avatar?: string
+  createdAt: Date
+}
+
+// Task history entry for audit trail
+export interface TaskHistoryEntry {
+  id: string
+  action: TaskAction
+  userId: string
+  userName: string
+  timestamp: Date
+  comment?: string
+  previousStatus?: TaskStatus
+  newStatus?: TaskStatus
+}
+
+// Main task interface
+export interface Task {
+  id: string
+  imageUrl: string
+  noisyText: string
+  correctedText: string
+  status: TaskStatus
+  assignedTo?: string
+  assignedToName?: string
+  reviewerId?: string
+  reviewerName?: string
+  finalReviewerId?: string
+  finalReviewerName?: string
+  history: TaskHistoryEntry[]
+  createdAt: Date
+  updatedAt: Date
+}
+
+// Task assignment request
+export interface AssignTaskRequest {
+  taskId: string
+  userId: string
+}
+
+// Task submission request
+export interface SubmitTaskRequest {
+  taskId: string
+  correctedText: string
+}
+
+// Task review request
+export interface ReviewTaskRequest {
+  taskId: string
+  approved: boolean
+  comment?: string
+}
+
+// Dashboard statistics
+export interface DashboardStats {
+  pending: number
+  inProgress: number
+  awaitingReview: number
+  completed: number
+  rejected: number
+  total: number
+}
+
+// Filter options for task lists
+export interface TaskFilter {
+  status?: TaskStatus[]
+  assignedTo?: string
+  reviewerId?: string
+  search?: string
+}
+
+// API response wrapper
+export interface ApiResponse<T> {
+  success: boolean
+  data?: T
+  error?: string
+}
+
+// Status display configuration
+export const STATUS_CONFIG: Record<TaskStatus, { label: string; color: string }> = {
+  [TaskStatus.Pending]: { label: 'Pending', color: 'bg-muted text-muted-foreground' },
+  [TaskStatus.InProgress]: { label: 'In Progress', color: 'bg-primary/20 text-primary' },
+  [TaskStatus.AwaitingReview]: { label: 'Awaiting Review', color: 'bg-warning/20 text-warning' },
+  [TaskStatus.InReview]: { label: 'In Review', color: 'bg-accent/20 text-accent' },
+  [TaskStatus.AwaitingFinalReview]: { label: 'Awaiting Final Review', color: 'bg-warning/20 text-warning' },
+  [TaskStatus.FinalReview]: { label: 'Final Review', color: 'bg-accent/20 text-accent' },
+  [TaskStatus.Completed]: { label: 'Completed', color: 'bg-success/20 text-success' },
+  [TaskStatus.Rejected]: { label: 'Rejected', color: 'bg-destructive/20 text-destructive' },
+}
+
+// Role display configuration
+export const ROLE_CONFIG: Record<UserRole, { label: string; description: string }> = {
+  [UserRole.Admin]: { label: 'Admin', description: 'System administrator with full access' },
+  [UserRole.Transcriber]: { label: 'Transcriber', description: 'Corrects noisy text transcriptions' },
+  [UserRole.Reviewer]: { label: 'Reviewer', description: 'Reviews and validates corrections' },
+  [UserRole.FinalReviewer]: { label: 'Final Reviewer', description: 'Performs final quality check' },
+}
+
+// Valid status transitions based on the state machine
+export const VALID_TRANSITIONS: Record<TaskStatus, TaskStatus[]> = {
+  [TaskStatus.Pending]: [TaskStatus.InProgress],
+  [TaskStatus.InProgress]: [TaskStatus.AwaitingReview],
+  [TaskStatus.AwaitingReview]: [TaskStatus.InReview],
+  [TaskStatus.InReview]: [TaskStatus.AwaitingFinalReview, TaskStatus.Rejected],
+  [TaskStatus.AwaitingFinalReview]: [TaskStatus.FinalReview],
+  [TaskStatus.FinalReview]: [TaskStatus.Completed, TaskStatus.Rejected],
+  [TaskStatus.Completed]: [],
+  [TaskStatus.Rejected]: [TaskStatus.InProgress],
+}
+
