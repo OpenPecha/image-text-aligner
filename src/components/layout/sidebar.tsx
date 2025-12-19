@@ -1,17 +1,17 @@
-import { NavLink, useNavigate } from 'react-router-dom'
+import { NavLink } from 'react-router-dom'
 import {
   LayoutDashboard,
   FileText,
   CheckSquare,
   Shield,
   Users,
+  Layers,
   LogOut,
   ChevronLeft,
   ChevronRight,
-  Settings,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { useUserStore } from '@/store/use-user-store'
+import { useAuth } from '@/features/auth'
 import { useUIStore } from '@/store/use-ui-store'
 import { UserRole, ROLE_CONFIG } from '@/types'
 import { Button } from '@/components/ui/button'
@@ -30,13 +30,13 @@ const navItems: NavItem[] = [
     label: 'Dashboard',
     href: '/dashboard',
     icon: LayoutDashboard,
-    roles: [UserRole.Admin, UserRole.Transcriber, UserRole.Reviewer, UserRole.FinalReviewer],
+    roles: [UserRole.Admin, UserRole.Annotator, UserRole.Reviewer, UserRole.FinalReviewer],
   },
   {
     label: 'My Tasks',
     href: '/tasks',
     icon: FileText,
-    roles: [UserRole.Transcriber],
+    roles: [UserRole.Annotator],
   },
   {
     label: 'Review Queue',
@@ -51,33 +51,37 @@ const navItems: NavItem[] = [
     roles: [UserRole.FinalReviewer],
   },
   {
-    label: 'User Management',
+    label: 'Users',
     href: '/admin/users',
     icon: Users,
     roles: [UserRole.Admin],
   },
   {
-    label: 'All Tasks',
+    label: 'Tasks',
     href: '/admin/tasks',
     icon: FileText,
+    roles: [UserRole.Admin],
+  },
+  {
+    label: 'Groups',
+    href: '/admin/groups',
+    icon: Layers,
     roles: [UserRole.Admin],
   },
 ]
 
 export function Sidebar() {
-  const navigate = useNavigate()
-  const { user, logout } = useUserStore()
+  const { currentUser, logout } = useAuth()
   const { sidebarCollapsed, toggleSidebar } = useUIStore()
 
-  if (!user) return null
+  if (!currentUser) return null
 
   const filteredNavItems = navItems.filter((item) =>
-    item.roles.includes(user.role)
+    item.roles.includes(currentUser.role)
   )
 
   const handleLogout = () => {
     logout()
-    navigate('/login')
   }
 
   const getInitials = (name: string) => {
@@ -110,7 +114,7 @@ export function Sidebar() {
           variant="ghost"
           size="icon"
           onClick={toggleSidebar}
-          className="h-8 w-8 text-sidebar-foreground hover:bg-sidebar-accent"
+          className="h-8 w-8 text-sidebar-foreground"
         >
           {sidebarCollapsed ? (
             <ChevronRight className="h-4 w-4" />
@@ -155,33 +159,24 @@ export function Sidebar() {
           )}
         >
           <Avatar className="h-9 w-9 shrink-0">
-            <AvatarImage src={user.avatar} alt={user.name} />
+            <AvatarImage src={currentUser.picture} alt={currentUser.name} />
             <AvatarFallback className="bg-primary text-primary-foreground text-xs">
-              {getInitials(user.name)}
+              {getInitials(currentUser.name)}
             </AvatarFallback>
           </Avatar>
           {!sidebarCollapsed && (
             <div className="flex-1 overflow-hidden">
               <p className="truncate text-sm font-medium text-sidebar-foreground">
-                {user.name}
+                {currentUser.name}
               </p>
               <p className="truncate text-xs text-muted-foreground">
-                {ROLE_CONFIG[user.role].label}
+                {ROLE_CONFIG[currentUser.role]?.label}
               </p>
             </div>
           )}
         </div>
 
         <div className={cn('mt-2 flex gap-1', sidebarCollapsed && 'flex-col')}>
-          <Button
-            variant="ghost"
-            size={sidebarCollapsed ? 'icon' : 'sm'}
-            className="flex-1 justify-start text-sidebar-foreground hover:bg-sidebar-accent"
-            onClick={() => navigate('/settings')}
-          >
-            <Settings className="h-4 w-4" />
-            {!sidebarCollapsed && <span className="ml-2">Settings</span>}
-          </Button>
           <Button
             variant="ghost"
             size={sidebarCollapsed ? 'icon' : 'sm'}
@@ -196,4 +191,3 @@ export function Sidebar() {
     </aside>
   )
 }
-

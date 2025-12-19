@@ -24,16 +24,8 @@ const delay = (ms: number = 300): Promise<void> => {
   return new Promise(resolve => setTimeout(resolve, randomDelay))
 }
 
-// ============ AUTH API ============
-
-export const loginUser = async (email: string): Promise<ApiResponse<User>> => {
-  await delay()
-  const user = users.find(u => u.email === email)
-  if (!user) {
-    return { success: false, error: 'User not found' }
-  }
-  return { success: true, data: user }
-}
+// ============ USER API ============
+// Note: Auth is now handled by Auth0. These are for user management.
 
 export const getUsersByRole = async (role: UserRole): Promise<ApiResponse<User[]>> => {
   await delay()
@@ -88,7 +80,7 @@ export const getTaskById = async (taskId: string): Promise<ApiResponse<Task>> =>
   return { success: true, data: { ...task } }
 }
 
-export const getTasksForTranscriber = async (userId: string): Promise<ApiResponse<Task[]>> => {
+export const getTasksForAnnotator = async (userId: string): Promise<ApiResponse<Task[]>> => {
   await delay()
   const result = tasks.filter(t => 
     t.assignedTo === userId && 
@@ -158,9 +150,9 @@ export const assignTask = async (
     return { success: false, error: 'Task is not in pending status' }
   }
 
-  const transcriber = findUserById(transcriberUserId)
-  if (!transcriber || transcriber.role !== UserRole.Transcriber) {
-    return { success: false, error: 'Invalid transcriber' }
+  const annotator = findUserById(transcriberUserId)
+  if (!annotator || annotator.role !== UserRole.Annotator) {
+    return { success: false, error: 'Invalid annotator' }
   }
 
   const admin = findUserById(adminUserId)
@@ -170,8 +162,8 @@ export const assignTask = async (
 
   const previousStatus = task.status
   task.status = TaskStatus.InProgress
-  task.assignedTo = transcriber.id
-  task.assignedToName = transcriber.name
+  task.assignedTo = annotator.id
+  task.assignedToName = annotator.name
   task.updatedAt = new Date()
 
   addHistoryEntry(task, TaskAction.Assigned, admin, previousStatus, task.status)
@@ -471,7 +463,7 @@ export const getDashboardStats = async (): Promise<ApiResponse<DashboardStats>> 
   return { success: true, data: stats }
 }
 
-export const getTranscriberStats = async (userId: string): Promise<ApiResponse<DashboardStats>> => {
+export const getAnnotatorStats = async (userId: string): Promise<ApiResponse<DashboardStats>> => {
   await delay(200)
 
   const userTasks = tasks.filter(t => t.assignedTo === userId)

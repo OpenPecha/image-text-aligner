@@ -9,8 +9,8 @@ import {
 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
-import { getDashboardStats, getTranscriberStats } from '@/services/api'
-import { useUserStore } from '@/store/use-user-store'
+import { getDashboardStats, getAnnotatorStats } from '@/services/api'
+import { useAuth } from '@/features/auth'
 import { UserRole } from '@/types'
 
 interface StatCardProps {
@@ -54,21 +54,21 @@ function StatCardSkeleton() {
 }
 
 export function StatsOverview() {
-  const { user } = useUserStore()
+  const { currentUser } = useAuth()
 
-  const isTranscriber = user?.role === UserRole.Transcriber
+  const isAnnotator = currentUser?.role === UserRole.Annotator
 
   const { data: stats, isLoading } = useQuery({
-    queryKey: ['dashboard-stats', user?.id, isTranscriber],
+    queryKey: ['dashboard-stats', currentUser?.id, isAnnotator],
     queryFn: async () => {
-      if (isTranscriber && user) {
-        const response = await getTranscriberStats(user.id)
+      if (isAnnotator && currentUser) {
+        const response = await getAnnotatorStats(currentUser.id)
         return response.data
       }
       const response = await getDashboardStats()
       return response.data
     },
-    enabled: !!user,
+    enabled: !!currentUser,
   })
 
   if (isLoading) {
@@ -86,7 +86,7 @@ export function StatsOverview() {
   }
 
   // Different stat cards based on role
-  if (isTranscriber) {
+  if (isAnnotator) {
     return (
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <StatCard
@@ -161,4 +161,3 @@ export function StatsOverview() {
     </div>
   )
 }
-

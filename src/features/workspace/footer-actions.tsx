@@ -1,7 +1,7 @@
 import { Loader2, Save, Send, XCircle, CheckCircle, ArrowLeft } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
-import { useUserStore } from '@/store/use-user-store'
+import { useAuth } from '@/features/auth'
 import { TaskStatus, UserRole } from '@/types'
 
 interface FooterActionsProps {
@@ -26,22 +26,22 @@ export function FooterActions({
   onReject,
 }: FooterActionsProps) {
   const navigate = useNavigate()
-  const { user } = useUserStore()
+  const { currentUser } = useAuth()
 
-  if (!user) return null
+  if (!currentUser) return null
 
-  const isTranscriber = user.role === UserRole.Transcriber
-  const isReviewer = user.role === UserRole.Reviewer
-  const isFinalReviewer = user.role === UserRole.FinalReviewer
-  const isAdmin = user.role === UserRole.Admin
+  const isAnnotator = currentUser.role === UserRole.Annotator
+  const isReviewer = currentUser.role === UserRole.Reviewer
+  const isFinalReviewer = currentUser.role === UserRole.FinalReviewer
+  const isAdmin = currentUser.role === UserRole.Admin
 
   // Determine which actions to show based on role and task status
   const canEdit = 
-    (isTranscriber && (taskStatus === TaskStatus.InProgress || taskStatus === TaskStatus.Rejected)) ||
+    (isAnnotator && (taskStatus === TaskStatus.InProgress || taskStatus === TaskStatus.Rejected)) ||
     isAdmin
 
   const canSubmit = 
-    (isTranscriber && (taskStatus === TaskStatus.InProgress || taskStatus === TaskStatus.Rejected)) ||
+    (isAnnotator && (taskStatus === TaskStatus.InProgress || taskStatus === TaskStatus.Rejected)) ||
     isAdmin
 
   const canReview = 
@@ -134,4 +134,3 @@ export function FooterActions({
     </div>
   )
 }
-

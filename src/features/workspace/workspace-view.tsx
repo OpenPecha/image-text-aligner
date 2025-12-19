@@ -18,7 +18,7 @@ import {
   claimForReview,
   claimForFinalReview,
 } from '@/services/api'
-import { useUserStore } from '@/store/use-user-store'
+import { useAuth } from '@/features/auth'
 import { useUIStore } from '@/store/use-ui-store'
 import { TaskStatus, UserRole } from '@/types'
 import type { Task } from '@/types'
@@ -32,7 +32,7 @@ interface WorkspaceViewProps {
 export function WorkspaceView({ task, isLoading }: WorkspaceViewProps) {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
-  const { user } = useUserStore()
+  const { currentUser } = useAuth()
   const { addToast } = useUIStore()
   const [rejectionDialogOpen, setRejectionDialogOpen] = useState(false)
   const [isDragging, setIsDragging] = useState(false)
@@ -42,21 +42,21 @@ export function WorkspaceView({ task, isLoading }: WorkspaceViewProps) {
   })
 
   // Determine if user can edit based on role and task status
-  const canEdit = user && task && (
-    (user.role === UserRole.Transcriber && 
+  const canEdit = currentUser && task && (
+    (currentUser.role === UserRole.Annotator && 
       (task.status === TaskStatus.InProgress || task.status === TaskStatus.Rejected) &&
-      task.assignedTo === user.id) ||
-    (user.role === UserRole.Admin)
+      task.assignedTo === currentUser.id) ||
+    (currentUser.role === UserRole.Admin)
   )
 
-  const isReviewer = user?.role === UserRole.Reviewer
-  const isFinalReviewer = user?.role === UserRole.FinalReviewer
+  const isReviewer = currentUser?.role === UserRole.Reviewer
+  const isFinalReviewer = currentUser?.role === UserRole.FinalReviewer
 
   // Mutations
   const saveMutation = useMutation({
     mutationFn: async () => {
-      if (!task || !user) throw new Error('Missing data')
-      const response = await saveTaskProgress(task.id, text, user.id)
+      if (!task || !currentUser) throw new Error('Missing data')
+      const response = await saveTaskProgress(task.id, text, currentUser.id)
       if (!response.success) throw new Error(response.error)
       return response.data
     },
@@ -71,8 +71,8 @@ export function WorkspaceView({ task, isLoading }: WorkspaceViewProps) {
 
   const submitMutation = useMutation({
     mutationFn: async () => {
-      if (!task || !user) throw new Error('Missing data')
-      const response = await submitTask(task.id, text, user.id)
+      if (!task || !currentUser) throw new Error('Missing data')
+      const response = await submitTask(task.id, text, currentUser.id)
       if (!response.success) throw new Error(response.error)
       return response.data
     },
@@ -89,13 +89,13 @@ export function WorkspaceView({ task, isLoading }: WorkspaceViewProps) {
 
   const claimMutation = useMutation({
     mutationFn: async () => {
-      if (!task || !user) throw new Error('Missing data')
+      if (!task || !currentUser) throw new Error('Missing data')
       if (isReviewer) {
-        const response = await claimForReview(task.id, user.id)
+        const response = await claimForReview(task.id, currentUser.id)
         if (!response.success) throw new Error(response.error)
         return response.data
       } else if (isFinalReviewer) {
-        const response = await claimForFinalReview(task.id, user.id)
+        const response = await claimForFinalReview(task.id, currentUser.id)
         if (!response.success) throw new Error(response.error)
         return response.data
       }
@@ -113,13 +113,13 @@ export function WorkspaceView({ task, isLoading }: WorkspaceViewProps) {
 
   const approveMutation = useMutation({
     mutationFn: async () => {
-      if (!task || !user) throw new Error('Missing data')
+      if (!task || !currentUser) throw new Error('Missing data')
       if (task.status === TaskStatus.InReview) {
-        const response = await approveTask(task.id, user.id)
+        const response = await approveTask(task.id, currentUser.id)
         if (!response.success) throw new Error(response.error)
         return response.data
       } else if (task.status === TaskStatus.FinalReview) {
-        const response = await finalApproveTask(task.id, user.id)
+        const response = await finalApproveTask(task.id, currentUser.id)
         if (!response.success) throw new Error(response.error)
         return response.data
       }
@@ -138,8 +138,8 @@ export function WorkspaceView({ task, isLoading }: WorkspaceViewProps) {
 
   const rejectMutation = useMutation({
     mutationFn: async (reason: string) => {
-      if (!task || !user) throw new Error('Missing data')
-      const response = await rejectTask(task.id, user.id, reason)
+      if (!task || !currentUser) throw new Error('Missing data')
+      const response = await rejectTask(task.id, currentUser.id, reason)
       if (!response.success) throw new Error(response.error)
       return response.data
     },
@@ -147,7 +147,7 @@ export function WorkspaceView({ task, isLoading }: WorkspaceViewProps) {
       queryClient.invalidateQueries({ queryKey: ['tasks'] })
       queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] })
       setRejectionDialogOpen(false)
-      addToast({ title: 'Task rejected', description: 'The transcriber has been notified', variant: 'default' })
+      addToast({ title: 'Task rejected', description: 'The annotator has been notified', variant: 'default' })
       navigate(-1)
     },
     onError: (error: Error) => {
@@ -173,7 +173,7 @@ export function WorkspaceView({ task, isLoading }: WorkspaceViewProps) {
   }, [])
 
   // Check if reviewer needs to claim the task
-  const needsToClaim = task && user && (
+  const needsToClaim = task && currentUser && (
     (isReviewer && task.status === TaskStatus.AwaitingReview) ||
     (isFinalReviewer && task.status === TaskStatus.AwaitingFinalReview)
   )
@@ -247,7 +247,7 @@ export function WorkspaceView({ task, isLoading }: WorkspaceViewProps) {
           )}
           onMouseDown={handleMouseDown}
         >
-          <GripHorizontal className="h-4 w-4 text-muted-foreground" />
+          <GripHorizontal className="h-2 w-4 text-muted-foreground" />
         </div>
 
         {/* Text Panel */}
@@ -274,13 +274,13 @@ export function WorkspaceView({ task, isLoading }: WorkspaceViewProps) {
         onSubmit={canEdit ? () => submitMutation.mutate() : undefined}
         onApprove={
           (task.status === TaskStatus.InReview || task.status === TaskStatus.FinalReview) &&
-          (task.reviewerId === user?.id || task.finalReviewerId === user?.id)
+          (task.reviewerId === currentUser?.id || task.finalReviewerId === currentUser?.id)
             ? () => approveMutation.mutate()
             : undefined
         }
         onReject={
           (task.status === TaskStatus.InReview || task.status === TaskStatus.FinalReview) &&
-          (task.reviewerId === user?.id || task.finalReviewerId === user?.id)
+          (task.reviewerId === currentUser?.id || task.finalReviewerId === currentUser?.id)
             ? () => setRejectionDialogOpen(true)
             : undefined
         }
@@ -296,4 +296,3 @@ export function WorkspaceView({ task, isLoading }: WorkspaceViewProps) {
     </div>
   )
 }
-

@@ -1,9 +1,13 @@
 import { Navigate } from 'react-router-dom'
-import { LoginForm } from '@/features/auth'
-import { useUserStore } from '@/store/use-user-store'
+import { LoginForm, useAuth } from '@/features/auth'
 
 export function LoginPage() {
-  const { isAuthenticated } = useUserStore()
+  const { isAuthenticated, isLoading } = useAuth()
+
+  // Show nothing while checking auth status
+  if (isLoading) {
+    return null
+  }
 
   // Redirect if already logged in
   if (isAuthenticated) {
@@ -12,4 +16,3 @@ export function LoginPage() {
 
   return <LoginForm />
 }
-

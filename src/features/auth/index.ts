@@ -1,3 +1,5 @@
-export * from './login-form'
-export * from './use-auth'
-
+export { AuthProvider } from './AuthProvider'
+export { AuthContext } from './auth-context'
+export { useAuth } from './use-auth'
+export { LoginForm } from './login-form'
+export type { AuthContextType } from './types'

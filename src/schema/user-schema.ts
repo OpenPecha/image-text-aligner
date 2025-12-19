@@ -1,0 +1,21 @@
+import z from 'zod'
+import { UserRole } from '@/types'
+
+export const userSchema = z.object({
+  name: z
+    .string()
+    .min(2, 'Name must be at least 2 characters')
+    .max(100, 'Name must be less than 100 characters'),
+  email: z
+    .string()
+    .email('Please enter a valid email address'),
+  role: z.nativeEnum(UserRole, {
+    message: 'Please select a role',
+  }),
+  groupId: z
+    .string()
+    .optional(),
+})
+
+export type UserFormData = z.infer<typeof userSchema>
+

@@ -10,7 +10,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { TaskList } from '@/features/dashboard'
-import { TaskAssigner, PipelineOverview } from '@/features/admin'
+import { TaskAssigner, PipelineOverview } from '@/features/admin/components'
 import { getTasks } from '@/services/api'
 import { TaskStatus, STATUS_CONFIG } from '@/types'
 import type { Task } from '@/types'

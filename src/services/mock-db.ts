@@ -14,30 +14,30 @@ export const generateId = (): string => {
   return `id_${idCounter}_${Date.now().toString(36)}`
 }
 
-// Sample users - one per role
+// Sample users for task management (these are separate from Auth0 users)
 export const users: User[] = [
   {
     id: 'user_admin_001',
     name: 'Alex Admin',
     email: 'alex@example.com',
     role: UserRole.Admin,
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Alex',
+    picture: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Alex',
     createdAt: new Date('2024-01-01'),
   },
   {
-    id: 'user_transcriber_001',
-    name: 'Taylor Transcriber',
+    id: 'user_annotator_001',
+    name: 'Taylor Annotator',
     email: 'taylor@example.com',
-    role: UserRole.Transcriber,
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Taylor',
+    role: UserRole.Annotator,
+    picture: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Taylor',
     createdAt: new Date('2024-01-15'),
   },
   {
-    id: 'user_transcriber_002',
+    id: 'user_annotator_002',
     name: 'Jordan Jones',
     email: 'jordan@example.com',
-    role: UserRole.Transcriber,
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Jordan',
+    role: UserRole.Annotator,
+    picture: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Jordan',
     createdAt: new Date('2024-02-01'),
   },
   {
@@ -45,7 +45,7 @@ export const users: User[] = [
     name: 'Riley Reviewer',
     email: 'riley@example.com',
     role: UserRole.Reviewer,
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Riley',
+    picture: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Riley',
     createdAt: new Date('2024-01-20'),
   },
   {
@@ -53,7 +53,7 @@ export const users: User[] = [
     name: 'Morgan Manager',
     email: 'morgan@example.com',
     role: UserRole.FinalReviewer,
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Morgan',
+    picture: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Morgan',
     createdAt: new Date('2024-01-10'),
   },
 ]
@@ -99,8 +99,8 @@ const createSampleHistory = (_taskId: string, status: TaskStatus): TaskHistoryEn
     history.push({
       id: generateId(),
       action: TaskAction.Submitted,
-      userId: 'user_transcriber_001',
-      userName: 'Taylor Transcriber',
+      userId: 'user_annotator_001',
+      userName: 'Taylor Annotator',
       timestamp: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
       previousStatus: TaskStatus.InProgress,
       newStatus: TaskStatus.AwaitingReview,
@@ -190,8 +190,8 @@ export const tasks: Task[] = [
     noisyText: sampleNoisyTexts[2],
     correctedText: 'The history of computing dates back to the early 19th century when Charles Babbage designed the first mechanical computer.',
     status: TaskStatus.InProgress,
-    assignedTo: 'user_transcriber_001',
-    assignedToName: 'Taylor Transcriber',
+    assignedTo: 'user_annotator_001',
+    assignedToName: 'Taylor Annotator',
     history: createSampleHistory('task_003', TaskStatus.InProgress),
     createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
     updatedAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
@@ -202,7 +202,7 @@ export const tasks: Task[] = [
     noisyText: sampleNoisyTexts[3],
     correctedText: '',
     status: TaskStatus.InProgress,
-    assignedTo: 'user_transcriber_002',
+    assignedTo: 'user_annotator_002',
     assignedToName: 'Jordan Jones',
     history: createSampleHistory('task_004', TaskStatus.InProgress),
     createdAt: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000),
@@ -215,8 +215,8 @@ export const tasks: Task[] = [
     noisyText: sampleNoisyTexts[4],
     correctedText: 'The human brain contains approximately 86 billion neurons, each connected to thousands of other neurons through synapses. This complex network enables thought, memory, and consciousness.',
     status: TaskStatus.AwaitingReview,
-    assignedTo: 'user_transcriber_001',
-    assignedToName: 'Taylor Transcriber',
+    assignedTo: 'user_annotator_001',
+    assignedToName: 'Taylor Annotator',
     history: createSampleHistory('task_005', TaskStatus.AwaitingReview),
     createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
     updatedAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
@@ -228,8 +228,8 @@ export const tasks: Task[] = [
     noisyText: sampleNoisyTexts[5],
     correctedText: 'Shakespeare wrote 37 plays and 154 sonnets during his lifetime. His works have been translated into every major language and are performed more often than those of any other playwright.',
     status: TaskStatus.InReview,
-    assignedTo: 'user_transcriber_001',
-    assignedToName: 'Taylor Transcriber',
+    assignedTo: 'user_annotator_001',
+    assignedToName: 'Taylor Annotator',
     reviewerId: 'user_reviewer_001',
     reviewerName: 'Riley Reviewer',
     history: createSampleHistory('task_006', TaskStatus.InReview),
@@ -243,7 +243,7 @@ export const tasks: Task[] = [
     noisyText: sampleNoisyTexts[6],
     correctedText: 'The Great Wall of China stretches over 13,000 miles and was built over many centuries. It is one of the most impressive architectural feats in human history.',
     status: TaskStatus.AwaitingFinalReview,
-    assignedTo: 'user_transcriber_002',
+    assignedTo: 'user_annotator_002',
     assignedToName: 'Jordan Jones',
     reviewerId: 'user_reviewer_001',
     reviewerName: 'Riley Reviewer',
@@ -258,8 +258,8 @@ export const tasks: Task[] = [
     noisyText: sampleNoisyTexts[7],
     correctedText: 'Quantum computing represents a fundamental shift in how we process information. Unlike classical computers that use bits, quantum computers use qubits that can exist in multiple states simultaneously.',
     status: TaskStatus.Completed,
-    assignedTo: 'user_transcriber_001',
-    assignedToName: 'Taylor Transcriber',
+    assignedTo: 'user_annotator_001',
+    assignedToName: 'Taylor Annotator',
     reviewerId: 'user_reviewer_001',
     reviewerName: 'Riley Reviewer',
     finalReviewerId: 'user_final_001',
@@ -275,7 +275,7 @@ export const tasks: Task[] = [
     noisyText: `The Amaz0n rainf0rest produces about 20% of the w0r1d's oxygen. lt is home to mi11ions of species, many of which have not yet been disc0vered by scientists.`,
     correctedText: 'The Amazon rainforest produces about 20% of the worlds oxygen.',
     status: TaskStatus.Rejected,
-    assignedTo: 'user_transcriber_002',
+    assignedTo: 'user_annotator_002',
     assignedToName: 'Jordan Jones',
     reviewerId: 'user_reviewer_001',
     reviewerName: 'Riley Reviewer',
@@ -332,4 +332,3 @@ export const getTasksForFinalReview = (): Task[] => {
     task.status === TaskStatus.FinalReview
   )
 }
-

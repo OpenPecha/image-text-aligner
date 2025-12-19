@@ -58,18 +58,7 @@ export function TextPanel({
   }
 
   return (
-    <div className="flex h-full flex-col bg-background relative overflow-hidden rounded-md border border-border">
-  {showOriginal && (
-    <div className="shrink-0 border-b border-border bg-muted/40 p-4 transition-all animate-in slide-in-from-top-2">
-      <div className="flex items-center gap-2 mb-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-        <Eye className="h-3 w-3" />
-        Transcription Source
-      </div>
-      <p className="text-sm text-muted-foreground whitespace-pre-wrap font-mono leading-relaxed opacity-90">
-        {noisyText}
-      </p>
-    </div>
-  )}
+    <div className="flex h-full flex-col bg-background relative overflow-hidden rounded-md">
 
   <div className="flex-1 relative">
     <textarea
@@ -89,7 +78,17 @@ export function TextPanel({
       spellCheck={false}
     />
   </div>
-
+  {showOriginal && (
+    <div className="shrink-0 border-b border-border bg-muted/40 p-4 transition-all animate-in slide-in-from-top-2">
+      <div className="flex items-center gap-2 mb-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+        <Eye className="h-3 w-3" />
+        Original Transcription 
+      </div>
+      <p className="text-sm text-muted-foreground whitespace-pre-wrap font-mono leading-relaxed opacity-90">
+        {noisyText}
+      </p>
+    </div>
+  )}
   <div className="flex shrink-0 items-center justify-between border-t border-border bg-background/95 px-4 py-2 backdrop-blur supports-[backdrop-filter]:bg-background/60">
     
     {/* Left: Metadata (Counts) */}

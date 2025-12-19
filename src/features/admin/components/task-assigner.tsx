@@ -20,7 +20,7 @@ import {
 import { Label } from '@/components/ui/label'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { assignTask, getUsersByRole } from '@/services/api'
-import { useUserStore } from '@/store/use-user-store'
+import { useAuth } from '@/features/auth'
 import { useUIStore } from '@/store/use-ui-store'
 import { UserRole } from '@/types'
 import type { Task } from '@/types'
@@ -34,13 +34,13 @@ interface TaskAssignerProps {
 export function TaskAssigner({ task, open, onOpenChange }: TaskAssignerProps) {
   const [selectedUserId, setSelectedUserId] = useState<string>('')
   const queryClient = useQueryClient()
-  const { user } = useUserStore()
+  const { currentUser } = useAuth()
   const { addToast } = useUIStore()
 
-  const { data: transcribers, isLoading: loadingUsers } = useQuery({
-    queryKey: ['users', UserRole.Transcriber],
+  const { data: annotators, isLoading: loadingUsers } = useQuery({
+    queryKey: ['users', UserRole.Annotator],
     queryFn: async () => {
-      const response = await getUsersByRole(UserRole.Transcriber)
+      const response = await getUsersByRole(UserRole.Annotator)
       return response.data || []
     },
     enabled: open,
@@ -48,10 +48,10 @@ export function TaskAssigner({ task, open, onOpenChange }: TaskAssignerProps) {
 
   const assignMutation = useMutation({
     mutationFn: async () => {
-      if (!task || !selectedUserId || !user) {
+      if (!task || !selectedUserId || !currentUser) {
         throw new Error('Missing required data')
       }
-      const response = await assignTask(task.id, selectedUserId, user.id)
+      const response = await assignTask(task.id, selectedUserId, currentUser.id)
       if (!response.success) {
         throw new Error(response.error || 'Failed to assign task')
       }
@@ -95,7 +95,7 @@ export function TaskAssigner({ task, open, onOpenChange }: TaskAssignerProps) {
             Assign Task
           </DialogTitle>
           <DialogDescription>
-            Select a transcriber to assign this task to. They will be notified
+            Select an annotator to assign this task to. They will be notified
             and can start working on it immediately.
           </DialogDescription>
         </DialogHeader>
@@ -110,26 +110,26 @@ export function TaskAssigner({ task, open, onOpenChange }: TaskAssignerProps) {
         )}
 
         <div className="space-y-2">
-          <Label htmlFor="transcriber">Assign to</Label>
+          <Label htmlFor="annotator">Assign to</Label>
           <Select
             value={selectedUserId}
             onValueChange={setSelectedUserId}
             disabled={loadingUsers}
           >
-            <SelectTrigger id="transcriber">
-              <SelectValue placeholder="Select a transcriber..." />
+            <SelectTrigger id="annotator">
+              <SelectValue placeholder="Select an annotator..." />
             </SelectTrigger>
             <SelectContent>
-              {transcribers?.map((transcriber) => (
-                <SelectItem key={transcriber.id} value={transcriber.id}>
+              {annotators?.map((annotator) => (
+                <SelectItem key={annotator.id} value={annotator.id}>
                   <div className="flex items-center gap-2">
                     <Avatar className="h-6 w-6">
-                      <AvatarImage src={transcriber.avatar} />
+                      <AvatarImage src={annotator.picture} />
                       <AvatarFallback className="text-xs">
-                        {getInitials(transcriber.name)}
+                        {getInitials(annotator.name)}
                       </AvatarFallback>
                     </Avatar>
-                    <span>{transcriber.name}</span>
+                    <span>{annotator.name}</span>
                   </div>
                 </SelectItem>
               ))}
@@ -159,4 +159,3 @@ export function TaskAssigner({ task, open, onOpenChange }: TaskAssignerProps) {
     </Dialog>
   )
 }
-

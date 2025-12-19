@@ -1,11 +1,11 @@
 import { useQuery } from '@tanstack/react-query'
 import { StatsOverview, TaskList } from '@/features/dashboard'
 import { getTasks } from '@/services/api'
-import { useUserStore } from '@/store/use-user-store'
+import { useAuth } from '@/features/auth'
 import { UserRole, TaskStatus, ROLE_CONFIG } from '@/types'
 
 export function DashboardPage() {
-  const { user } = useUserStore()
+  const { currentUser } = useAuth()
 
   const { data: recentTasks, isLoading } = useQuery({
     queryKey: ['tasks', 'recent'],
@@ -15,17 +15,17 @@ export function DashboardPage() {
     },
   })
 
-  if (!user) return null
+  if (!currentUser) return null
 
   return (
     <div className="space-y-8 animate-fade-in">
       {/* Welcome Header */}
       <div>
         <h1 className="text-3xl font-bold tracking-tight">
-          Welcome back, {user.name.split(' ')[0]}
+          Welcome back, {currentUser.name.split(' ')[0]}
         </h1>
         <p className="text-muted-foreground mt-1">
-          {ROLE_CONFIG[user.role].description}
+          {ROLE_CONFIG[currentUser.role].description}
         </p>
       </div>
 
@@ -33,12 +33,12 @@ export function DashboardPage() {
       <StatsOverview />
 
       {/* Quick Actions based on role */}
-      {user.role === UserRole.Transcriber && (
+      {currentUser.role === UserRole.Annotator && (
         <div className="space-y-4">
           <h2 className="text-xl font-semibold">Your Active Tasks</h2>
           <TaskList
             tasks={recentTasks?.filter(t => 
-              t.assignedTo === user.id && 
+              t.assignedTo === currentUser.id && 
               (t.status === TaskStatus.InProgress || t.status === TaskStatus.Rejected)
             ) || []}
             isLoading={isLoading}
@@ -48,13 +48,13 @@ export function DashboardPage() {
         </div>
       )}
 
-      {user.role === UserRole.Reviewer && (
+      {currentUser.role === UserRole.Reviewer && (
         <div className="space-y-4">
           <h2 className="text-xl font-semibold">Tasks Awaiting Review</h2>
           <TaskList
             tasks={recentTasks?.filter(t => 
               t.status === TaskStatus.AwaitingReview || 
-              (t.status === TaskStatus.InReview && t.reviewerId === user.id)
+              (t.status === TaskStatus.InReview && t.reviewerId === currentUser.id)
             ) || []}
             isLoading={isLoading}
             emptyMessage="No tasks awaiting review."
@@ -63,13 +63,13 @@ export function DashboardPage() {
         </div>
       )}
 
-      {user.role === UserRole.FinalReviewer && (
+      {currentUser.role === UserRole.FinalReviewer && (
         <div className="space-y-4">
           <h2 className="text-xl font-semibold">Tasks Awaiting Final Review</h2>
           <TaskList
             tasks={recentTasks?.filter(t => 
               t.status === TaskStatus.AwaitingFinalReview || 
-              (t.status === TaskStatus.FinalReview && t.finalReviewerId === user.id)
+              (t.status === TaskStatus.FinalReview && t.finalReviewerId === currentUser.id)
             ) || []}
             isLoading={isLoading}
             emptyMessage="No tasks awaiting final review."
@@ -78,7 +78,7 @@ export function DashboardPage() {
         </div>
       )}
 
-      {user.role === UserRole.Admin && (
+      {currentUser.role === UserRole.Admin && (
         <div className="space-y-4">
           <h2 className="text-xl font-semibold">Recent Activity</h2>
           <TaskList
@@ -92,4 +92,3 @@ export function DashboardPage() {
     </div>
   )
 }
-

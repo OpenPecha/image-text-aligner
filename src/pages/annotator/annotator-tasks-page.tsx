@@ -2,21 +2,21 @@ import { useQuery } from '@tanstack/react-query'
 import { FileText, AlertCircle } from 'lucide-react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { TaskList } from '@/features/dashboard'
-import { getTasksForTranscriber } from '@/services/api'
-import { useUserStore } from '@/store/use-user-store'
+import { getTasksForAnnotator } from '@/services/api'
+import { useAuth } from '@/features/auth'
 import { TaskStatus } from '@/types'
 
-export function TranscriberTasksPage() {
-  const { user } = useUserStore()
+export function AnnotatorTasksPage() {
+  const { currentUser } = useAuth()
 
   const { data: tasks, isLoading } = useQuery({
-    queryKey: ['tasks', 'transcriber', user?.id],
+    queryKey: ['tasks', 'annotator', currentUser?.id],
     queryFn: async () => {
-      if (!user) return []
-      const response = await getTasksForTranscriber(user.id)
+      if (!currentUser) return []
+      const response = await getTasksForAnnotator(currentUser.id)
       return response.data || []
     },
-    enabled: !!user,
+    enabled: !!currentUser,
   })
 
   const inProgressTasks = tasks?.filter(t => t.status === TaskStatus.InProgress) || []
@@ -30,7 +30,7 @@ export function TranscriberTasksPage() {
           My Tasks
         </h1>
         <p className="text-muted-foreground mt-1">
-          Manage your assigned transcription tasks
+          Manage your assigned annotation tasks
         </p>
       </div>
 

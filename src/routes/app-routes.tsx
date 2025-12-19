@@ -3,25 +3,31 @@ import { AuthLayout, MainLayout } from '@/components/layout'
 import { ProtectedRoute } from './protected-route'
 import { UserRole } from '@/types'
 
-// Pages - lazy loaded for better performance
+// Pages
 import { LoginPage } from '@/pages/auth/login-page'
+import { CallbackPage } from '@/pages/auth/callback-page'
 import { DashboardPage } from '@/pages/dashboard-page'
-import { TranscriberTasksPage } from '@/pages/transcriber/transcriber-tasks-page'
+import { AnnotatorTasksPage } from '@/pages/annotator/annotator-tasks-page'
 import { ReviewerQueuePage } from '@/pages/reviewer/reviewer-queue-page'
 import { FinalReviewerQueuePage } from '@/pages/final-reviewer/final-reviewer-queue-page'
 import { AdminUsersPage } from '@/pages/admin/admin-users-page'
 import { AdminTasksPage } from '@/pages/admin/admin-tasks-page'
+import { AdminGroupsPage } from '@/pages/admin/admin-groups-page'
 import { EditorPage } from '@/pages/workspace/editor-page'
 import { NotFoundPage } from '@/pages/not-found'
 
 export const router = createBrowserRouter([
-  // Auth routes
+  // Auth routes (public)
   {
     element: <AuthLayout />,
     children: [
       {
         path: '/login',
         element: <LoginPage />,
+      },
+      {
+        path: '/callback',
+        element: <CallbackPage />,
       },
     ],
   },
@@ -34,29 +40,22 @@ export const router = createBrowserRouter([
       </ProtectedRoute>
     ),
     children: [
-      // Default redirect
       {
         path: '/',
         element: <Navigate to="/dashboard" replace />,
       },
-
-      // Dashboard - accessible by all roles
       {
         path: '/dashboard',
         element: <DashboardPage />,
       },
-
-      // Transcriber routes
       {
         path: '/tasks',
         element: (
-          <ProtectedRoute allowedRoles={[UserRole.Transcriber, UserRole.Admin]}>
-            <TranscriberTasksPage />
+          <ProtectedRoute allowedRoles={[UserRole.Annotator, UserRole.Admin]}>
+            <AnnotatorTasksPage />
           </ProtectedRoute>
         ),
       },
-
-      // Reviewer routes
       {
         path: '/review',
         element: (
@@ -65,8 +64,6 @@ export const router = createBrowserRouter([
           </ProtectedRoute>
         ),
       },
-
-      // Final Reviewer routes
       {
         path: '/final-review',
         element: (
@@ -75,8 +72,6 @@ export const router = createBrowserRouter([
           </ProtectedRoute>
         ),
       },
-
-      // Admin routes
       {
         path: '/admin/users',
         element: (
@@ -93,14 +88,18 @@ export const router = createBrowserRouter([
           </ProtectedRoute>
         ),
       },
-
-      // Editor workspace - accessible by all roles with tasks
+      {
+        path: '/admin/groups',
+        element: (
+          <ProtectedRoute allowedRoles={[UserRole.Admin]}>
+            <AdminGroupsPage />
+          </ProtectedRoute>
+        ),
+      },
       {
         path: '/editor/:taskId',
         element: <EditorPage />,
       },
-
-      // Settings placeholder
       {
         path: '/settings',
         element: (
@@ -118,4 +117,3 @@ export const router = createBrowserRouter([
     element: <NotFoundPage />,
   },
 ])
-

@@ -4,7 +4,7 @@ import { Shield, Clock } from 'lucide-react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { TaskList } from '@/features/dashboard'
 import { getTasksForFinalReviewer, claimForFinalReview } from '@/services/api'
-import { useUserStore } from '@/store/use-user-store'
+import { useAuth } from '@/features/auth'
 import { useUIStore } from '@/store/use-ui-store'
 import { TaskStatus } from '@/types'
 import type { Task } from '@/types'
@@ -12,23 +12,23 @@ import type { Task } from '@/types'
 export function FinalReviewerQueuePage() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
-  const { user } = useUserStore()
+  const { currentUser } = useAuth()
   const { addToast } = useUIStore()
 
   const { data: tasks, isLoading } = useQuery({
-    queryKey: ['tasks', 'final-reviewer', user?.id],
+    queryKey: ['tasks', 'final-reviewer', currentUser?.id],
     queryFn: async () => {
-      if (!user) return []
-      const response = await getTasksForFinalReviewer(user.id)
+      if (!currentUser) return []
+      const response = await getTasksForFinalReviewer(currentUser.id)
       return response.data || []
     },
-    enabled: !!user,
+    enabled: !!currentUser,
   })
 
   const claimMutation = useMutation({
     mutationFn: async (taskId: string) => {
-      if (!user) throw new Error('Not authenticated')
-      const response = await claimForFinalReview(taskId, user.id)
+      if (!currentUser) throw new Error('Not authenticated')
+      const response = await claimForFinalReview(taskId, currentUser.id)
       if (!response.success) throw new Error(response.error)
       return response.data
     },
@@ -46,7 +46,7 @@ export function FinalReviewerQueuePage() {
 
   const awaitingTasks = tasks?.filter(t => t.status === TaskStatus.AwaitingFinalReview) || []
   const myReviewTasks = tasks?.filter(t => 
-    t.status === TaskStatus.FinalReview && t.finalReviewerId === user?.id
+    t.status === TaskStatus.FinalReview && t.finalReviewerId === currentUser?.id
   ) || []
 
   const handleClaimAndOpen = (task: Task) => {
@@ -113,4 +113,3 @@ export function FinalReviewerQueuePage() {
     </div>
   )
 }
-
